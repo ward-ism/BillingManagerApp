@@ -7,22 +7,22 @@ using PDFExtractor.Models;
 
 public class PdfFieldParser
 {
+    //set keystring
     private const string KeyString = "HUNTINGTON PARK";
 
     public InvoiceModel ProcessPdf(string pdfPath)
     {
         try
         {
-            // Extract text directly from the PDF
+            // extract text
             string fullText = ExtractTextFromPdf(pdfPath);
 
-            // Count occurrences of "Huntington Park"
+            // count occurrences of keystring
             int keyStringCount = CountOccurrences(fullText, KeyString);
 
-            // Only process PDFs where "Huntington Park" appears 4 or more times
+            // instruct to process PDFs where keystring appears X times
             if (keyStringCount >= 4)
             {
-                // Extract the details (PRO#, Date, Pieces, LoadID) from the full text
                 return ExtractInvoiceDetails(fullText);
             }
             else
@@ -38,7 +38,7 @@ public class PdfFieldParser
         }
     }
 
-    // Extract all text from the PDF
+    // extract all text from PDF
     private string ExtractTextFromPdf(string pdfPath)
     {
         StringWriter textWriter = new StringWriter();
@@ -47,7 +47,7 @@ public class PdfFieldParser
         {
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
 
-            // Iterate through each page and extract text
+            // iterate through
             for (int page = 1; page <= pdfDocument.GetNumberOfPages(); page++)
             {
                 string pageText = PdfTextExtractor.GetTextFromPage(pdfDocument.GetPage(page));
@@ -58,7 +58,7 @@ public class PdfFieldParser
         return textWriter.ToString();
     }
 
-    // Count occurrences of the key string in the extracted text
+    // count occurrences of the key string
     private int CountOccurrences(string text, string keyString)
     {
         int count = 0;
@@ -73,7 +73,7 @@ public class PdfFieldParser
         return count;
     }
 
-    // Extract details like PRO#, Date, Number of Pieces, and LoadID from the full text
+    // extract the details (PRO#, Date, Pieces, LoadID) for InvoiceModel
     private InvoiceModel ExtractInvoiceDetails(string fullText)
     {
         string proNumber = ExtractProNumber(fullText);
@@ -84,14 +84,14 @@ public class PdfFieldParser
         return new InvoiceModel(proNumber, invoiceDate, numberOfPieces, loadID);
     }
 
-    // Extract PRO# (assuming it's the first 9-digit number)
+    // extract PRO# (assumes first 9-digit number)
     private string ExtractProNumber(string text)
     {
         var match = Regex.Match(text, @"\b\d{9}\b");
         return match.Success ? match.Value : "Not found";
     }
 
-    // Extract Invoice Date (find the earliest date in the text)
+    // extract Date (earliest date in the text)
     private DateTime ExtractInvoiceDate(string text)
     {
         var matches = Regex.Matches(text, @"\b\d{2}/\d{2}/\d{4}\b");
@@ -108,18 +108,25 @@ public class PdfFieldParser
         return earliestDate == DateTime.MaxValue ? DateTime.MinValue : earliestDate;
     }
 
-    // Extract Number of Pieces (assume $10 per piece, find the first monetary value and divide by 10)
+    // extract pieces (assume $10 per piece, find the first monetary value and divide by 10)
     private int ExtractNumberOfPieces(string text)
     {
         var match = Regex.Match(text, @"\$\d+(\.\d{2})?");
         if (match.Success && decimal.TryParse(match.Value.Trim('$'), out decimal amount))
         {
+            // check if the amount is divisible by 10 - hoping to catch bad accessorials
+            if (amount % 10 != 0)
+            {
+                throw new InvalidOperationException("check invoice");
+            }
+
             return (int)(amount / 10);
         }
         return 0;
     }
 
-    // Extract LoadID (find the "GP" number followed by semicolon)
+
+    // extract LoadID (GP number followed by semicolon)
     private string ExtractLoadID(string text)
     {
         var match = Regex.Match(text, @"\bGP\d+;");
