@@ -94,18 +94,18 @@ public class OutlookPDFExtractor
     {
         string outputFileName = Path.Combine(_outputDirectory, Path.GetFileNameWithoutExtension(pdfPath) + "_Page1.pdf");
 
-        // Open the PDF document in Import mode
+        // open pdf in import mode
         using (PdfDocument originalDocument = PdfReader.Open(pdfPath, PdfDocumentOpenMode.Import))
         {
             if (originalDocument.PageCount > 0)
             {
-                // Create a new PDF document
+                // create new odf
                 using (PdfDocument newDocument = new PdfDocument())
                 {
-                    // Import the first page and add it to the new document
+                    // import and add first page to new doc
                     newDocument.AddPage(originalDocument.Pages[0]);
 
-                    // Save the new document
+                    // save
                     newDocument.Save(outputFileName);
 
                     Console.WriteLine($"First page saved: {outputFileName}");
