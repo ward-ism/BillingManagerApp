@@ -23,7 +23,7 @@ public class OutlookPDFExtractor
 
     private MAPIFolder GetFolder(NameSpace outlookNamespace, string folderPath)
     {
-        string[] folderNames = folderPath.Split('\\'); // Support nested folder paths
+        string[] folderNames = folderPath.Split('\\'); // for nested folders
         MAPIFolder currentFolder = outlookNamespace.GetDefaultFolder(OlDefaultFolders.olFolderInbox);
 
         foreach (string folderName in folderNames)
@@ -56,10 +56,10 @@ public class OutlookPDFExtractor
 
         try
         {
-            // Update here: Use the helper function to get the target folder
+            
             MAPIFolder targetFolder = GetFolder(outlookNamespace, _subfolderName);
 
-            // Process emails in the subfolder
+            // process emails in specified folder
             foreach (object item in targetFolder.Items)
             {
                 if (item is MailItem mailItem && mailItem.Attachments.Count > 0)
@@ -70,13 +70,13 @@ public class OutlookPDFExtractor
                         {
                             string tempFilePath = Path.Combine(Path.GetTempPath(), attachment.FileName);
 
-                            // Save the attachment to a temporary location
+                            // save attachment to temp
                             attachment.SaveAsFile(tempFilePath);
 
-                            // Copy the first page of the PDF to the output directory
+                            // copy first page
                             SaveFirstPage(tempFilePath);
 
-                            // Delete the temporary file
+                            // delete temp
                             File.Delete(tempFilePath);
                         }
                     }
